@@ -1,6 +1,6 @@
 # Ouroboros SMP
 
-A community Minecraft server on Folia.
+A community Minecraft server on Folia, with a custom Discord-linked governance system for account linking, moderation, and fair play.
 
 ## Join us
 - **Play:** `play.ouroboros-smp.com`
