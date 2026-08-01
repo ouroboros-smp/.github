@@ -1,0 +1,79 @@
+name: Java API compatibility
+
+on:
+  workflow_call:
+    inputs:
+      java_version:
+        description: JDK used by the Gradle build
+        type: string
+        default: "25"
+      gradle_tasks:
+        description: Gradle verification tasks, including the repository's apiCompatibilityCheck
+        type: string
+        required: true
+      version_property:
+        description: Property in gradle.properties that must match release tags
+        type: string
+        default: ""
+      tag_prefix:
+        description: Prefix placed before the declared version in release tags
+        type: string
+        default: "v"
+      runner_json:
+        description: JSON array of runner labels
+        type: string
+        default: '["self-hosted","crucible-pc"]'
+      report_paths:
+        description: Optional newline-delimited API compatibility report paths
+        type: string
+        default: ""
+
+jobs:
+  compatibility:
+    name: API and release contract
+    runs-on: ${{ fromJSON(inputs.runner_json) }}
+    permissions:
+      contents: read
+      packages: read
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+          cache: gradle
+      - name: Make Gradle executable
+        shell: bash
+        run: chmod +x gradlew
+      - name: Verify release tag matches Gradle version
+        if: github.ref_type == 'tag' && inputs.version_property != ''
+        shell: bash
+        env:
+          VERSION_PROPERTY: ${{ inputs.version_property }}
+          TAG_PREFIX: ${{ inputs.tag_prefix }}
+        run: |
+          set -euo pipefail
+          version="$(sed -n "s/^${VERSION_PROPERTY}[[:space:]]*=[[:space:]]*//p" gradle.properties | tail -n 1)"
+          if [[ -z "$version" ]]; then
+            echo "Missing ${VERSION_PROPERTY} in gradle.properties" >&2
+            exit 1
+          fi
+          expected="${TAG_PREFIX}${version}"
+          if [[ "$GITHUB_REF_NAME" != "$expected" ]]; then
+            echo "Release tag ${GITHUB_REF_NAME} does not match ${VERSION_PROPERTY}=${version}" >&2
+            exit 1
+          fi
+      - name: Run API compatibility checks
+        shell: bash
+        run: ./gradlew ${{ inputs.gradle_tasks }} --no-daemon --console=plain
+      - name: Upload API compatibility reports
+        if: always() && inputs.report_paths != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-compatibility-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: ${{ inputs.report_paths }}
