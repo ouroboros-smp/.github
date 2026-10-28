@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in a mod, fork, bot, the website, or the server is broken.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search open issues before filing. Security vulnerabilities do not belong here. Report those privately, as described in the [organization security policy](https://github.com/ouroboros-smp/.github/blob/main/SECURITY.md).
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      description: The Minecraft version you were playing. For a website or bot, write n/a.
+      placeholder: "1.21.1"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: Mod version
+      description: The version of the mod, fork, or bot. For the website or the server itself, name the component or write n/a.
+      placeholder: "1.4.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: side
+    attributes:
+      label: Server or client
+      description: Where the problem shows up.
+      options:
+        - Server
+        - Client
+        - Both
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did before the problem showed up.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste the relevant lines from latest.log or the crash report, or attach the file. Remove tokens, passwords, and coordinates when they are sensitive.
+    validations:
+      required: false
